@@ -31,8 +31,8 @@
  	python/subunit/progress_model.py \
  	python/subunit/run.py \
  	python/subunit/v2.py \
---- README.rst.orig	2018-03-24 08:22:44.000000000 -0600
-+++ README.rst	2018-07-03 15:08:21.114335195 -0600
+--- a/README.rst.orig	2018-03-24 08:22:44.000000000 -0600
++++ b/README.rst	2018-07-03 15:08:21.114335195 -0600
 @@ -15,9 +15,6 @@
  
    See the COPYING file for full details on the licensing of Subunit.
