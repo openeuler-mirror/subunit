@@ -1,6 +1,6 @@
 Name:                subunit
 Version:             1.3.0
-Release:             13
+Release:             14
 Summary:             C bindings for subunit
 License:             ASL 2.0 or BSD
 URL:                 https://launchpad.net/subunit
@@ -9,6 +9,7 @@ Patch0:              %{name}-unbundle-iso8601.patch
 Patch1:              %{name}-decode-binary-to-unicode.patch
 Patch2:              0001-Migrate-Gtk-interface-to-GObject-introspection.patch
 Patch3:              0002-Fix-file-open-for-python3.patch
+Patch4:              0003-port-to-python-iso8601-0.1.12.patch
 BuildRequires:       check-devel cppunit-devel gcc-c++ libtool perl-generators
 BuildRequires:       perl(ExtUtils::MakeMaker) pkgconfig
 BuildRequires:       python3-devel python3-docutils python3-extras python3-fixtures python3-iso8601
@@ -109,6 +110,7 @@ test cases.
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+%patch4 -p1
 fixtimestamp() {
   touch -r $1.orig $1
   rm $1.orig
@@ -247,6 +249,9 @@ popd
 %exclude %{_bindir}/%{name}-diff
 
 %changelog
+* Wed Feb 03 2021 maminjie <maminjie1@huawei.com> - 1.3.0-14
+- Port to python-iso8601 0.1.12
+
 * Tue Aug 11 2020 yanan li <liyanan032@huawei.com> - 1.3.0-13
 - Remove python2-subunit subpackage 
 

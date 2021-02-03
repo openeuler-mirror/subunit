@@ -1,0 +1,122 @@
+From 50101aef9e200edeaa800a77c74cda5461850296 Mon Sep 17 00:00:00 2001
+From: maminjie <maminjie1@huawei.com>
+Date: Wed, 3 Feb 2021 11:40:42 +0800
+Subject: [PATCH] port to python-iso8601 0.1.12
+
+---
+ python/subunit/__init__.py                  | 2 +-
+ python/subunit/test_results.py              | 2 +-
+ python/subunit/tests/test_test_protocol.py  | 4 ++--
+ python/subunit/tests/test_test_protocol2.py | 4 ++--
+ python/subunit/tests/test_test_results.py   | 4 ++--
+ python/subunit/v2.py                        | 2 +-
+ 6 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/python/subunit/__init__.py b/python/subunit/__init__.py
+index b3b198c..846cc31 100644
+--- a/python/subunit/__init__.py
++++ b/python/subunit/__init__.py
+@@ -799,7 +799,7 @@ class TestProtocolClient(testresult.TestResult):
+ 
+         ":param datetime: A datetime.datetime object.
+         """
+-        time = a_datetime.astimezone(iso8601.Utc())
++        time = a_datetime.astimezone(iso8601.UTC)
+         self._stream.write(_b("time: %04d-%02d-%02d %02d:%02d:%02d.%06dZ\n" % (
+             time.year, time.month, time.day, time.hour, time.minute,
+             time.second, time.microsecond)))
+diff --git a/python/subunit/test_results.py b/python/subunit/test_results.py
+index 53c3dad..3cda44a 100644
+--- a/python/subunit/test_results.py
++++ b/python/subunit/test_results.py
+@@ -196,7 +196,7 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
+         time = self._time
+         if time is not None:
+             return
+-        time = datetime.datetime.utcnow().replace(tzinfo=iso8601.Utc())
++        time = datetime.datetime.utcnow().replace(tzinfo=iso8601.UTC)
+         self.decorated.time(time)
+ 
+     def progress(self, offset, whence):
+diff --git a/python/subunit/tests/test_test_protocol.py b/python/subunit/tests/test_test_protocol.py
+index 7427b12..7692489 100644
+--- a/python/subunit/tests/test_test_protocol.py
++++ b/python/subunit/tests/test_test_protocol.py
+@@ -993,7 +993,7 @@ class TestTestProtocolServerStreamTime(unittest.TestCase):
+         self.assertEqual(_b(""), self.stream.getvalue())
+         self.assertEqual([
+             ('time', datetime.datetime(2001, 12, 12, 12, 59, 59, 0,
+-            iso8601.Utc()))
++            iso8601.UTC))
+             ], self.result._events)
+ 
+ 
+@@ -1368,7 +1368,7 @@ class TestTestProtocolClient(TestCase):
+     def test_time(self):
+         # Calling time() outputs a time signal immediately.
+         self.protocol.time(
+-            datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc()))
++            datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC))
+         self.assertEqual(
+             _b("time: 2009-10-11 12:13:14.000015Z\n"),
+             self.io.getvalue())
+diff --git a/python/subunit/tests/test_test_protocol2.py b/python/subunit/tests/test_test_protocol2.py
+index bbf510e..f970ed6 100644
+--- a/python/subunit/tests/test_test_protocol2.py
++++ b/python/subunit/tests/test_test_protocol2.py
+@@ -218,7 +218,7 @@ class TestStreamResultToBytes(TestCase):
+ 
+     def test_timestamp(self):
+         timestamp = datetime.datetime(2001, 12, 12, 12, 59, 59, 45,
+-            iso8601.Utc())
++            iso8601.UTC)
+         result, output = self._make_result()
+         result.status(test_id="bar", test_status='success', timestamp=timestamp)
+         self.assertEqual(CONSTANT_TIMESTAMP, output.getvalue())
+@@ -382,7 +382,7 @@ class TestByteStreamToStreamResult(TestCase):
+ 
+     def test_timestamp(self):
+         timestamp = datetime.datetime(2001, 12, 12, 12, 59, 59, 45,
+-            iso8601.Utc())
++            iso8601.UTC)
+         self.check_event(CONSTANT_TIMESTAMP,
+             'success', test_id='bar', timestamp=timestamp)
+ 
+diff --git a/python/subunit/tests/test_test_results.py b/python/subunit/tests/test_test_results.py
+index 44f95b3..f1a83fd 100644
+--- a/python/subunit/tests/test_test_results.py
++++ b/python/subunit/tests/test_test_results.py
+@@ -178,7 +178,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
+     def test_calling_time_inhibits_automatic_time(self):
+         # Calling time() outputs a time signal immediately and prevents
+         # automatically adding one when other methods are called.
+-        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc())
++        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC)
+         self.result.time(time)
+         self.result.startTest(self)
+         self.result.stopTest(self)
+@@ -186,7 +186,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
+         self.assertEqual(time, self.decorated._calls[0])
+ 
+     def test_calling_time_None_enables_automatic_time(self):
+-        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc())
++        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC)
+         self.result.time(time)
+         self.assertEqual(1, len(self.decorated._calls))
+         self.assertEqual(time, self.decorated._calls[0])
+diff --git a/python/subunit/v2.py b/python/subunit/v2.py
+index 254617c..be2049d 100644
+--- a/python/subunit/v2.py
++++ b/python/subunit/v2.py
+@@ -49,7 +49,7 @@ FLAG_TAGS = 0x0080
+ FLAG_MIME_TYPE = 0x0020
+ FLAG_EOF = 0x0010
+ FLAG_FILE_CONTENT = 0x0040
+-EPOCH = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=iso8601.Utc())
++EPOCH = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=iso8601.UTC)
+ NUL_ELEMENT = b'\0'[0]
+ # Contains True for types for which 'nul in thing' falsely returns false.
+ _nul_test_broken = {}
+-- 
+2.23.0
+
