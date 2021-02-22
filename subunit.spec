@@ -1,6 +1,6 @@
 Name:                subunit
 Version:             1.3.0
-Release:             14
+Release:             15
 Summary:             C bindings for subunit
 License:             ASL 2.0 or BSD
 URL:                 https://launchpad.net/subunit
@@ -10,6 +10,7 @@ Patch1:              %{name}-decode-binary-to-unicode.patch
 Patch2:              0001-Migrate-Gtk-interface-to-GObject-introspection.patch
 Patch3:              0002-Fix-file-open-for-python3.patch
 Patch4:              0003-port-to-python-iso8601-0.1.12.patch
+Patch5:              0004-Work-around-short-read-race.patch
 BuildRequires:       check-devel cppunit-devel gcc-c++ libtool perl-generators
 BuildRequires:       perl(ExtUtils::MakeMaker) pkgconfig
 BuildRequires:       python3-devel python3-docutils python3-extras python3-fixtures python3-iso8601
@@ -84,8 +85,8 @@ Summary:             Test code for the python 3 subunit bindings
 BuildArch:           noarch
 Requires:            python3-%{name} = %{version}-%{release} %{name}-filters = %{version}-%{release}
 %{?python_provide:%python_provide python3-%{name}-test}
-Obsoletes:           python2-%{name}-test < 1.3.0-9
-Provides:            python2-%{name}-test = %{version}-%{release}
+Obsoletes:           python3-%{name}-test < 1.3.0-9
+Provides:            python3-%{name}-test = %{version}-%{release}
 %description -n python3-%{name}-test
 %{summary}.
 
@@ -111,6 +112,7 @@ test cases.
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 fixtimestamp() {
   touch -r $1.orig $1
   rm $1.orig
@@ -174,7 +176,7 @@ for fil in iso8601.cpython-37.opt-1.pyc iso8601.cpython-37.pyc; do
      %{buildroot}%{python3_sitelib}/subunit/__pycache__/$fil
 done
 popd
-%make_install pkgpython_PYTHON='' INSTALL="%{_bindir}/install -p"
+%make_install INSTALL="%{_bindir}/install -p"
 mkdir -p %{buildroot}%{_sysconfdir}/profile.d
 cp -p shell/share/%{name}.sh %{buildroot}%{_sysconfdir}/profile.d
 rm -f %{buildroot}%{_libdir}/*.la
@@ -249,6 +251,9 @@ popd
 %exclude %{_bindir}/%{name}-diff
 
 %changelog
+* Mon Feb 22 2021 wangxiyuan <wangxiyuan1007@gmail.com> - 1.3.0-15
+- CleanUp python2 residual content and backport a python3 known issue.
+
 * Wed Feb 03 2021 maminjie <maminjie1@huawei.com> - 1.3.0-14
 - Port to python-iso8601 0.1.12
 
