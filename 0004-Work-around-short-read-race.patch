@@ -1,0 +1,70 @@
+From 2db224de33b69718add29fa06904043b231efa44 Mon Sep 17 00:00:00 2001
+From: wangxiyuan <wangxiyuan1007@gmail.com>
+Date: Mon, 22 Feb 2021 16:14:11 +0800
+Subject: [PATCH] Work around 'short read' race
+
+Backport python3 fix
+---
+ python/subunit/v2.py | 35 +++++++++++++++++++++--------------
+ 1 file changed, 21 insertions(+), 14 deletions(-)
+
+diff --git a/python/subunit/v2.py b/python/subunit/v2.py
+index be2049d..e44dc05 100644
+--- a/python/subunit/v2.py
++++ b/python/subunit/v2.py
+@@ -71,6 +71,22 @@ def has_nul(buffer_or_bytes):
+     else:
+         return NUL_ELEMENT in buffer_or_bytes
+ 
++def read_exactly(stream, size):
++    """Read exactly size bytes from stream.
++    :param stream: A file like object to read bytes from. Must support
++        read(<count>) and return bytes.
++    :param size: The number of bytes to retrieve.
++    """
++    data = b''
++    remaining = size
++    while remaining:
++        read = stream.read(remaining)
++        if len(read) == 0:
++            raise ParseError('Short read - got %d bytes, wanted %d bytes' % (
++                len(data), size))
++        data += read
++        remaining -= len(read)
++    return data
+ 
+ class ParseError(Exception):
+     """Used to pass error messages within the parser."""
+@@ -404,19 +420,11 @@ class ByteStreamToStreamResult(object):
+ 
+     def _parse(self, packet, result):
+             # 2 bytes flags, at most 3 bytes length.
+-            packet.append(self.source.read(5))
+-            if len(packet[-1]) != 5:
+-                raise ParseError(
+-                    'Short read - got %d bytes, wanted 5' % len(packet[-1]))
+-            flag_bytes = packet[-1][:2]
+-            flags = struct.unpack(FMT_16, flag_bytes)[0]
+-            length, consumed = self._parse_varint(
+-                packet[-1], 2, max_3_bytes=True)
+-            remainder = self.source.read(length - 6)
+-            if len(remainder) != length - 6:
+-                raise ParseError(
+-                    'Short read - got %d bytes, wanted %d bytes' % (
+-                    len(remainder), length - 6))
++            header = read_exactly(self.source, 5)
++            packet.append(header)
++            flags = struct.unpack(FMT_16, header[:2])[0]
++            length, consumed = self._parse_varint(header, 2, max_3_bytes=True)
++            remainder = read_exactly(self.source, length - 6)
+             if consumed != 3:
+                 # Avoid having to parse torn values
+                 packet[-1] += remainder
+@@ -515,4 +523,3 @@ class ByteStreamToStreamResult(object):
+             return utf8, length+pos
+         except UnicodeDecodeError:
+             raise ParseError('UTF8 string at offset %d is not UTF8' % (pos-2,))
+-
+-- 
+2.23.0.windows.1
+
