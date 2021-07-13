@@ -1,19 +1,5 @@
-From 50101aef9e200edeaa800a77c74cda5461850296 Mon Sep 17 00:00:00 2001
-From: maminjie <maminjie1@huawei.com>
-Date: Wed, 3 Feb 2021 11:40:42 +0800
-Subject: [PATCH] port to python-iso8601 0.1.12
-
----
- python/subunit/__init__.py                  | 2 +-
- python/subunit/test_results.py              | 2 +-
- python/subunit/tests/test_test_protocol.py  | 4 ++--
- python/subunit/tests/test_test_protocol2.py | 4 ++--
- python/subunit/tests/test_test_results.py   | 4 ++--
- python/subunit/v2.py                        | 2 +-
- 6 files changed, 9 insertions(+), 9 deletions(-)
-
 diff --git a/python/subunit/__init__.py b/python/subunit/__init__.py
-index b3b198c..846cc31 100644
+index 17a970a..63c7d66 100644
 --- a/python/subunit/__init__.py
 +++ b/python/subunit/__init__.py
 @@ -799,7 +799,7 @@ class TestProtocolClient(testresult.TestResult):
@@ -105,7 +91,7 @@ index 44f95b3..f1a83fd 100644
          self.assertEqual(1, len(self.decorated._calls))
          self.assertEqual(time, self.decorated._calls[0])
 diff --git a/python/subunit/v2.py b/python/subunit/v2.py
-index 254617c..be2049d 100644
+index e8a31d6..c299cab 100644
 --- a/python/subunit/v2.py
 +++ b/python/subunit/v2.py
 @@ -49,7 +49,7 @@ FLAG_TAGS = 0x0080
@@ -117,6 +103,3 @@ index 254617c..be2049d 100644
  NUL_ELEMENT = b'\0'[0]
  # Contains True for types for which 'nul in thing' falsely returns false.
  _nul_test_broken = {}
--- 
-2.23.0
-

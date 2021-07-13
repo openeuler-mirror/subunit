@@ -1,17 +1,14 @@
 Name:                subunit
-Version:             1.3.0
-Release:             15
+Version:             1.4.0
+Release:             1
 Summary:             C bindings for subunit
 License:             ASL 2.0 or BSD
 URL:                 https://launchpad.net/subunit
-Source0:             https://launchpad.net/subunit/trunk/1.3/+download/subunit-%{version}.tar.gz
+Source0:             https://launchpad.net/subunit/trunk/%{version}/+download/%{name}-%{version}.tar.gz
 Patch0:              %{name}-unbundle-iso8601.patch
 Patch1:              %{name}-decode-binary-to-unicode.patch
-Patch2:              0001-Migrate-Gtk-interface-to-GObject-introspection.patch
-Patch3:              0002-Fix-file-open-for-python3.patch
-Patch4:              0003-port-to-python-iso8601-0.1.12.patch
-Patch5:              0004-Work-around-short-read-race.patch
-BuildRequires:       check-devel cppunit-devel gcc-c++ libtool perl-generators
+Patch2:              0001-port-to-python-iso8601-0.1.14.patch
+BuildRequires:       check-devel cppunit-devel gcc-c++ libtool perl-generators make
 BuildRequires:       perl(ExtUtils::MakeMaker) pkgconfig
 BuildRequires:       python3-devel python3-docutils python3-extras python3-fixtures python3-iso8601
 BuildRequires:       python3-hypothesis python3-setuptools python3-testscenarios
@@ -106,13 +103,7 @@ Subunit C bindings in a static library, for building statically linked
 test cases.
 
 %prep
-%setup -qc
-%patch0
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
+%autosetup -n %{name}-%{version} -S git
 fixtimestamp() {
   touch -r $1.orig $1
   rm $1.orig
@@ -251,6 +242,9 @@ popd
 %exclude %{_bindir}/%{name}-diff
 
 %changelog
+* Mon Jul 12 2021 huangtianhua <huangtianhua@huawei.com> - 1.4.0-1
+- Upgrade to 1.4.0 and drop the patches which have been upstreamed
+
 * Mon Feb 22 2021 wangxiyuan <wangxiyuan1007@gmail.com> - 1.3.0-15
 - CleanUp python2 residual content and backport a python3 known issue.
 
