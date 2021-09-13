@@ -1,16 +1,18 @@
 %define _unpackaged_files_terminate_build 0
 Name:                subunit
 Version:             1.4.0
-Release:             1
+Release:             2
 Summary:             C bindings for subunit
 License:             ASL 2.0 or BSD
 URL:                 https://launchpad.net/subunit
-Source0:			 https://github.com/testing-cabal/subunit/archive/%{version}/%{name}-%{version}.tar.gz
+Source0:	     https://github.com/testing-cabal/subunit/archive/%{version}/%{name}-%{version}.tar.gz
 Patch0:              %{name}-unbundle-iso8601.patch
 Patch1:              %{name}-decode-binary-to-unicode.patch
 Patch2:              0001-port-to-python-iso8601-0.1.14.patch
 BuildRequires:       check-devel cppunit-devel gcc-c++ libtool perl-generators make
 BuildRequires:       perl(ExtUtils::MakeMaker) pkgconfig
+BuildRequires:  	 python2-devel python2-hypothesis python2-docutils python2-extras python2-fixtures
+BuildRequires:  	 python2-iso8601 python2-setuptools python2-testscenarios  python2-testtools >= 1.8.0
 BuildRequires:       python3-devel python3-docutils python3-extras python3-fixtures python3-iso8601
 BuildRequires:       python3-hypothesis python3-setuptools python3-testscenarios
 BuildRequires:       python3-testtools >= 1.8.0
@@ -53,6 +55,22 @@ BuildArch:           noarch
 Subunit shell bindings.  See the python-subunit package for test
 processing functionality.
 
+%package -n python2-%{name}
+Summary:        Streaming protocol and Command line filters
+BuildArch:      noarch
+Requires:       python2-extras python2-iso8601 python2-testtools >= 1.8.0
+Requires:       pygtk2 python2-junitxml
+Provides:       subunit-filters = %{version}-%{release}
+Obsoletes:      subunit-filters < %{version}-%{release}
+
+%{?python_provide:%python_provide python2-%{name}}
+
+%description -n python2-%{name}
+Subunit is a streaming protocol for test results. The package provides two functions,
+one function is that streaming protocol for test results, another is that command line
+filters for processing subunit streams. Log in to the relevant website for details.
+
+
 %package -n python3-%{name}
 Summary:             Streaming protocol for test results
 BuildArch:           noarch
@@ -81,7 +99,7 @@ A number of useful things can be done easily with subunit:
 %package -n python3-%{name}-test
 Summary:             Test code for the python 3 subunit bindings
 BuildArch:           noarch
-Requires:            python3-%{name} = %{version}-%{release} %{name}-filters = %{version}-%{release}
+Requires:            python3-%{name} = %{version}-%{release}
 %{?python_provide:%python_provide python3-%{name}-test}
 Obsoletes:           python3-%{name}-test < 1.3.0-9
 Provides:            python3-%{name}-test = %{version}-%{release}
@@ -91,8 +109,7 @@ Provides:            python3-%{name}-test = %{version}-%{release}
 %package filters
 Summary:             Command line filters for processing subunit streams
 BuildArch:           noarch
-Requires:            python3-%{name} = %{version}-%{release} python3-gobject gtk3 >= 3.20
-Requires:            libnotify >= 0.7.7 python3-junitxml
+Requires:	     python2-%{name} = %{version}-%{release} pygtk2 python2-junitxml
 %description filters
 Command line filters for processing subunit streams.
 
@@ -105,10 +122,15 @@ test cases.
 
 %prep
 %autosetup -n %{name}-%{version} -S git
+
 fixtimestamp() {
   touch -r $1.orig $1
   rm $1.orig
 }
+
+sed "/^tests_LDADD/ilibcppunit_subunit_la_LIBADD = -lcppunit libsubunit.la\n" \
+    -i Makefile.am
+
 for filt in filters/*; do
   sed 's,/usr/bin/env ,/usr/bin/,' $filt > ${filt}.new
   sed -i 's,\(%{_bindir}/python\),\13,' ${filt}.new
@@ -116,13 +138,15 @@ for filt in filters/*; do
   touch -r $filt ${filt}.new
   mv -f ${filt}.new $filt
 done
-sed "/^tests_LDADD/ilibcppunit_subunit_la_LIBADD = -lcppunit libsubunit.la\n" \
-    -i Makefile.am
+    
 for fil in $(grep -Frl "%{_bindir}/env python"); do
   sed -i.orig 's,%{_bindir}/env python,%{_bindir}/python2,' $fil
   fixtimestamp $fil
 done
+ln -fs %{python2_sitelib}/iso8601/iso8601.py python/subunit/iso8601.py
+
 autoreconf -fi
+
 cp -a ../%{name}-%{version} ../python3
 mv ../python3 .
 pushd python3
@@ -130,17 +154,20 @@ for fil in $(grep -Frl "%{_bindir}/python2"); do
   sed -i.orig 's,\(%{_bindir}/python\)2,\13,' $fil
   fixtimestamp $fil
 done
-ln -f -s %{python3_sitelib}/iso8601/iso8601.py python/subunit/iso8601.py
+ln -fs %{python3_sitelib}/iso8601/iso8601.py python/subunit/iso8601.py
 popd
 
 %build
 export INSTALLDIRS=perl
+export PYTHON=%{_bindir}/python2
 %configure --enable-shared --enable-static
 sed -e 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' \
     -e 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' \
     -e 's|CC=.g..|& -Wl,--as-needed|' \
     -i libtool
-make %{?_smp_mflags}
+%make_build
+%py2_build
+
 pushd python3
 export INSTALLDIRS=perl
 export PYTHON=%{_bindir}/python3
@@ -168,16 +195,29 @@ for fil in iso8601.cpython-37.opt-1.pyc iso8601.cpython-37.pyc; do
      %{buildroot}%{python3_sitelib}/subunit/__pycache__/$fil
 done
 popd
+
 %make_install INSTALL="%{_bindir}/install -p"
-mkdir -p %{buildroot}%{_sysconfdir}/profile.d
+
+%py2_install
+
+for file in iso8601.py iso8601.pyc iso8601.pyo; do
+  ln -fs %{python2_sitelib}/iso8601/$file %{buildroot}%{python2_sitelib}/subunit/$file
+done
+
+install -d %{buildroot}%{_sysconfdir}/profile.d
 cp -p shell/share/%{name}.sh %{buildroot}%{_sysconfdir}/profile.d
-rm -f %{buildroot}%{_libdir}/*.la
+
+%delete_la
+
 mkdir -p %{buildroot}%{perl_vendorlib}
 mv %{buildroot}%{perl_privlib}/Subunit* %{buildroot}%{perl_vendorlib}
 rm -fr %{buildroot}%{perl_archlib}
+
+chmod 0755 %{buildroot}%{python2_sitelib}/%{name}/run.py
 chmod 0755 %{buildroot}%{_bindir}/subunit-diff
 chmod 0755 %{buildroot}%{python3_sitelib}/%{name}/tests/sample-script.py
 chmod 0755 %{buildroot}%{python3_sitelib}/%{name}/tests/sample-two-script.py
+
 touch -r c/include/%{name}/child.h %{buildroot}%{_includedir}/%{name}/child.h
 touch -r c++/SubunitTestProgressListener.h \
       %{buildroot}%{_includedir}/%{name}/SubunitTestProgressListener.h
@@ -187,6 +227,11 @@ for fil in filters/*; do
 done
 
 %check
+export LD_LIBRARY_PATH=$PWD/.libs
+export PYTHONPATH=$PWD/python/subunit:$PWD/python/subunit/tests
+make check
+PYTHONPATH=%{buildroot}%{python2_sitelib} %{__python2} -c "import subunit.iso8601"
+
 pushd python3
 export PYTHON=%{__python3}
 make check
@@ -225,6 +270,12 @@ popd
 %doc shell/README
 %license Apache-2.0 BSD COPYING
 %config(noreplace) %{_sysconfdir}/profile.d/%{name}.sh
+	
+%files -n python2-%{name}
+%license Apache-2.0 BSD COPYING
+%{python2_sitelib}/%{name}/
+%{python2_sitelib}/python_%{name}-%{version}-*.egg-info
+%exclude %{python2_sitelib}/%{name}/tests/
 
 %files -n python3-%{name}
 %license Apache-2.0 BSD COPYING
@@ -243,6 +294,9 @@ popd
 %exclude %{_bindir}/%{name}-diff
 
 %changelog
+* Sat Sep 11 2021 baizhonggui <baizhonggui@huawei.com> - 1.4.0-2
+- New add sub python2 package
+
 * Tue Sep 7 2021 baizhonggui <baizhonggui@huawei.com> - 1.4.0-1
 - Upgrade to 1.4.0
 
