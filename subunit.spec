@@ -1,7 +1,7 @@
 %define _unpackaged_files_terminate_build 0
 Name:                subunit
 Version:             1.4.0
-Release:             1
+Release:             2
 Summary:             C bindings for subunit
 License:             ASL 2.0 or BSD
 URL:                 https://launchpad.net/subunit
@@ -110,6 +110,7 @@ Provides:            python3-%{name}-test = %{version}-%{release}
 Summary:             Command line filters for processing subunit streams
 BuildArch:           noarch
 Requires:	     python2-%{name} = %{version}-%{release} pygtk2 python2-junitxml
+Requires:            python2-gobject-base libnotify >= 0.7.7
 %description filters
 Command line filters for processing subunit streams.
 
@@ -294,6 +295,10 @@ popd
 %exclude %{_bindir}/%{name}-diff
 
 %changelog
+* Fri Oct 8 2021 huanghaitao <huanghaitao8@huawei.com> - 1.4.0-2
+- Add Requires: python2-gobject-base libnotify >= 0.7.7
+- fix command subunit-notify subunit2gtk --help error
+
 * Tue Sep 7 2021 baizhonggui <baizhonggui@huawei.com> - 1.4.0-1
 - Upgrade to 1.4.0
 
