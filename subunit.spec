@@ -1,7 +1,7 @@
 %define _unpackaged_files_terminate_build 0
 Name:                subunit
 Version:             1.4.0
-Release:             2
+Release:             3
 Summary:             C bindings for subunit
 License:             ASL 2.0 or BSD
 URL:                 https://launchpad.net/subunit
@@ -9,10 +9,11 @@ Source0:	     https://github.com/testing-cabal/subunit/archive/%{version}/%{name
 Patch0:              %{name}-unbundle-iso8601.patch
 Patch1:              %{name}-decode-binary-to-unicode.patch
 Patch2:              0001-port-to-python-iso8601-0.1.14.patch
+Patch3:              fix-subunit-notify-command-warning.patch
 BuildRequires:       check-devel cppunit-devel gcc-c++ libtool perl-generators make
 BuildRequires:       perl(ExtUtils::MakeMaker) pkgconfig
-BuildRequires:  	 python2-devel python2-hypothesis python2-docutils python2-extras python2-fixtures
-BuildRequires:  	 python2-iso8601 python2-setuptools python2-testscenarios  python2-testtools >= 1.8.0
+BuildRequires:       python2-devel python2-hypothesis python2-docutils python2-extras python2-fixtures
+BuildRequires:       python2-iso8601 python2-setuptools python2-testscenarios  python2-testtools >= 1.8.0
 BuildRequires:       python3-devel python3-docutils python3-extras python3-fixtures python3-iso8601
 BuildRequires:       python3-hypothesis python3-setuptools python3-testscenarios
 BuildRequires:       python3-testtools >= 1.8.0
@@ -295,6 +296,9 @@ popd
 %exclude %{_bindir}/%{name}-diff
 
 %changelog
+* Sat Oct 9 2021 huanghaitao <huanghaitao8@huawei.com> - 1.4.0-3
+- fix command subunit-notify warning
+
 * Fri Oct 8 2021 huanghaitao <huanghaitao8@huawei.com> - 1.4.0-2
 - Add Requires: python2-gobject-base libnotify >= 0.7.7
 - fix command subunit-notify subunit2gtk --help error
