@@ -1,6 +1,6 @@
 Name:                subunit
 Version:             1.4.0
-Release:             1
+Release:             2
 Summary:             C bindings for subunit
 License:             ASL 2.0 or BSD
 URL:                 https://launchpad.net/subunit
@@ -167,7 +167,12 @@ for fil in iso8601.cpython-37.opt-1.pyc iso8601.cpython-37.pyc; do
      %{buildroot}%{python3_sitelib}/subunit/__pycache__/$fil
 done
 popd
+%ifarch riscv64
+%make_install pkgpython_PYTHON='' INSTALL="%{_bindir}/install -p"
+%else
 %make_install INSTALL="%{_bindir}/install -p"
+%endif
+
 mkdir -p %{buildroot}%{_sysconfdir}/profile.d
 cp -p shell/share/%{name}.sh %{buildroot}%{_sysconfdir}/profile.d
 rm -f %{buildroot}%{_libdir}/*.la
@@ -242,6 +247,9 @@ popd
 %exclude %{_bindir}/%{name}-diff
 
 %changelog
+* Tue Dec 14 2021 lvxiaoqian <xiaoqian@nj.iscas.ac.cn> - 1.4.0-2
+- disable automake python compilation for riscv
+
 * Mon Jul 12 2021 huangtianhua <huangtianhua@huawei.com> - 1.4.0-1
 - Upgrade to 1.4.0 and drop the patches which have been upstreamed
 
